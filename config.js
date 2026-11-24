@@ -7,7 +7,7 @@
  *           e NÃO grava nada.
  */
 window.CASAMENTO_CONFIG = {
-  endpoint: "",
+  endpoint: "https://script.google.com/macros/s/AKfycbxnAXOaEiEv-C5QWwjZQIDh-AyyarY5q_Peyxq5bA6L2CCFFo2DfAVuNhi0oaW9y5iqwg/exec",
 
   // prazo de confirmação (horário de Brasília, UTC-3) — provisório, a confirmar com o bufê
   prazo: "2027-09-02T23:59:00-03:00",
