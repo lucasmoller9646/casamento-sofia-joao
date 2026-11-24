@@ -143,38 +143,55 @@ function prepararAba_(sh, cols) {
   sh.getRange('A:A').setNumberFormat('dd/mm/yyyy hh:mm');
 }
 
+/** Rode se o Resumo mostrar #ERROR! (por exemplo, depois de mudar o idioma/local da planilha). */
+function refazerResumo() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var res = ss.getSheetByName(ABA_RESUMO) || ss.insertSheet(ABA_RESUMO, 0);
+  prepararResumo_(res);
+  SpreadsheetApp.flush();
+}
+
+// Planilhas em português, espanhol, italiano etc. separam os argumentos das fórmulas com ";",
+// as em inglês com ",". As fórmulas abaixo usam "¦" e trocamos pelo separador do local da planilha.
+function separador_(ss) {
+  var loc = String(ss.getSpreadsheetLocale() || 'en_US');
+  return /^(en|ja|ko|zh|th|iw|he|hi|ms|fil|tl)/.test(loc) ? ',' : ';';
+}
+
 function prepararResumo_(sh) {
+  var SEP = separador_(sh.getParent());
+  var f = function (txt) { return txt.split('¦').join(SEP); };
   var R = "'" + ABA_RESPOSTAS + "'!", C = "'" + ABA_CONVIDADOS + "'!", P = "'" + ABA_PRESENTES + "'!";
-  var atual = R + 'B:B,"atual"';
+  var atual = R + 'B:B¦"atual"';
   var linhas = [
     ['Casamento de Sofia e João Otávio · 2 de outubro de 2027', ''],
     ['', ''],
-    ['Respostas recebidas (atuais)', '=COUNTIF(' + R + 'B:B,"atual")'],
-    ['Famílias que vêm', '=COUNTIFS(' + atual + ',' + R + 'E:E,"Sim")'],
-    ['Famílias que não vêm', '=COUNTIFS(' + atual + ',' + R + 'E:E,"Não")'],
+    ['Respostas recebidas (atuais)', '=COUNTIF(' + R + 'B:B¦"atual")'],
+    ['Famílias que vêm', '=COUNTIFS(' + atual + '¦' + R + 'E:E¦"Sim")'],
+    ['Famílias que não vêm', '=COUNTIFS(' + atual + '¦' + R + 'E:E¦"Não")'],
     ['', ''],
-    ['Pessoas no total', '=SUMIFS(' + R + 'J:J,' + atual + ')'],
-    ['Adultos', '=SUMIFS(' + R + 'H:H,' + atual + ')'],
-    ['Crianças', '=SUMIFS(' + R + 'I:I,' + atual + ')'],
+    ['Pessoas no total', '=SUMIFS(' + R + 'J:J¦' + atual + ')'],
+    ['Adultos', '=SUMIFS(' + R + 'H:H¦' + atual + ')'],
+    ['Crianças', '=SUMIFS(' + R + 'I:I¦' + atual + ')'],
     ['', ''],
-    ['Pessoas na cerimônia', '=SUMIFS(' + R + 'J:J,' + atual + ',' + R + 'F:F,"Sim")'],
-    ['Pessoas na festa', '=SUMIFS(' + R + 'J:J,' + atual + ',' + R + 'G:G,"Sim")'],
+    ['Pessoas na cerimônia', '=SUMIFS(' + R + 'J:J¦' + atual + '¦' + R + 'F:F¦"Sim")'],
+    ['Pessoas na festa', '=SUMIFS(' + R + 'J:J¦' + atual + '¦' + R + 'G:G¦"Sim")'],
     ['', ''],
-    ['Pessoas que vão se hospedar em Guaratinguetá', '=SUMIFS(' + R + 'J:J,' + atual + ',' + R + 'L:L,"Sim")'],
-    ['Pessoas que ainda não sabem', '=SUMIFS(' + R + 'J:J,' + atual + ',' + R + 'L:L,"Ainda não sabe")'],
+    ['Pessoas que vão se hospedar em Guaratinguetá', '=SUMIFS(' + R + 'J:J¦' + atual + '¦' + R + 'L:L¦"Sim")'],
+    ['Pessoas que ainda não sabem', '=SUMIFS(' + R + 'J:J¦' + atual + '¦' + R + 'L:L¦"Ainda não sabe")'],
     ['', ''],
     ['Presentes avisados pelos convidados', '=COUNTA(' + P + 'B2:B)'],
     ['Valor avisado (confira no extrato)', '=SUM(' + P + 'D2:D)']
-  ];
+  ].map(function (l) { return [l[0], f(l[1])]; });
   sh.getRange(1, 1, linhas.length, 2).setValues(linhas);
   sh.getRange('A1').setFontSize(14).setFontWeight('bold');
   sh.getRange('A3:A' + linhas.length).setFontWeight('bold');
   sh.getRange('B' + linhas.length).setNumberFormat('"R$" #,##0.00');
   // listas em colunas separadas: cada QUERY cresce para baixo sem invadir a outra
   sh.getRange('D3').setValue('Restrições alimentares').setFontWeight('bold');
-  sh.getRange('D4').setFormula('=IFERROR(QUERY(' + R + 'A:O,"select C, K where B = \'atual\' and K <> \'\' label C \'Família\', K \'Restrições\'",1),"Nenhuma restrição informada")');
+  sh.getRange('D4').setFormula(f('=IFERROR(QUERY(' + R + 'A:O¦"select C, K where B = \'atual\' and K <> \'\' label C \'Família\', K \'Restrições\'"¦1)¦"Nenhuma restrição informada")'));
   sh.getRange('G3').setValue('Crianças e suas idades').setFontWeight('bold');
-  sh.getRange('G4').setFormula('=IFERROR(QUERY(' + C + 'A:J,"select C, E, H where B = \'atual\' and D = \'Criança\' label C \'Criança\', E \'Idade\', H \'Família\'",1),"Ainda não há crianças confirmadas")');
+  sh.getRange('G4').setFormula(f('=IFERROR(QUERY(' + C + 'A:J¦"select C, E, H where B = \'atual\' and D = \'Criança\' label C \'Criança\', E \'Idade\', H \'Família\'"¦1)¦"Ainda não há crianças confirmadas")'));
   sh.setColumnWidth(1, 340);
   sh.setColumnWidth(2, 180);
   sh.setColumnWidth(4, 200); sh.setColumnWidth(5, 260);
