@@ -82,6 +82,8 @@ O repositório é `lucasmoller9646/casamento-sofia-joao` e precisa ser **públic
 2. Espere um ou dois minutos (o andamento aparece na aba **Actions**) e recarregue a página de Settings › Pages, que vai mostrar *Your site is live at* **https://lucasmoller9646.github.io/casamento-sofia-joao/** (com o domínio configurado, passa a ser **https://joaosofia.com.br**).
 3. Abra o endereço no celular e confira os dois idiomas (`?lang=it` força o italiano).
 
+**Cache do navegador:** o GitHub Pages manda o navegador guardar os arquivos por 10 minutos. Por isso o `index.html` chama `config.js?v=…`, `site.js?v=…` etc.: ao mudar um desses arquivos, troque também o número depois de `?v=` no `index.html`, para os visitantes receberem a versão nova logo.
+
 **Para mudar algo depois:** abra o arquivo no GitHub, clique no lápis (*Edit this file*), altere e clique em **Commit changes**; o site se atualiza em um ou dois minutos. É assim que se cola a URL da planilha no `config.js` (passo 5 da seção 1).
 
 **Domínio próprio: joaosofia.com.br (registro.br).** O arquivo `CNAME` na raiz já contém `joaosofia.com.br`, e a `og:image`/`og:url` do `index.html` já apontam para esse endereço. Não apague o `CNAME`.
